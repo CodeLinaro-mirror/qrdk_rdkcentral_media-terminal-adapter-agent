@@ -55,7 +55,7 @@
 #define DEBUG_INI_NAME  "/etc/debug.ini"
 #ifdef MTA_TR104SUPPORT
 #define MTAAGENT_SYSEVENT 1
-#include "cosa_x_cisco_com_mta_internal.h"
+#include "TR104.h"
 #include "webconfig_framework.h"
 #endif
 
