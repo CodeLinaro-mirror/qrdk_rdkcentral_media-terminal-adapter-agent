@@ -1358,6 +1358,9 @@ if(pMtaProv)
             {
                 CcspTraceInfo(("%s: syscfg MTA_PROVISION successfully set to true\n", __FUNCTION__));
             }
+#if defined(MTA_TR104SUPPORT)
+            MtaTR104Init();
+#endif
 			status = ANSC_STATUS_SUCCESS;
                    
 		}
