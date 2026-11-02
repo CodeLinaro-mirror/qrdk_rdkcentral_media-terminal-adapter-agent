@@ -73,6 +73,7 @@
 /* Must precede mta_hal.h: LatticeFrameworkTypes.h typedefs CHAR, which mta_hal.h #defines */
 #include "TR104.h"
 #include "secure_wrapper.h"
+#include <pthread.h>
 #endif
 #include "plugin_main_apis.h"
 #include "safec_lib_common.h"
@@ -98,15 +99,17 @@ static token_t sysevent_token;
 #if defined(ENABLE_ETH_WAN) && defined(MTA_TR104SUPPORT)
 int CosaDmlTR104DataSet(char *pString,int bootup);
 
+static pthread_mutex_t mtaTR104InitMutex = PTHREAD_MUTEX_INITIALIZER;
+static int mtaTR104InitInProgress;
+static int mtaTR104InitComplete;
+
 /* Called once MTA HAL provisioning succeeds; replaces the timed MTA_PROVISION poll in ssp_main.c */
-static void MtaTR104Init(void)
+static void *MtaTR104InitWorker(void *arg)
 {
-    static int tr104Initialized = 0;
     char value[8] = {'\0'};
     int retry, err = -1;
 
-    if (tr104Initialized)
-        return;
+    (void)arg;
 
     for (retry = 0; retry < 5; retry++)
     {
@@ -117,7 +120,7 @@ static void MtaTR104Init(void)
     if (retry == 5 || strcmp(value, "true") != 0)
     {
         CcspTraceInfo(("RFC for TR104 is false \n"));
-        return;
+        goto thread_exit;
     }
     CcspTraceInfo(("RFC for TR104 is true\n"));
 
@@ -132,9 +135,11 @@ static void MtaTR104Init(void)
     if (err != 0)
     {
         CcspTraceWarning(("TR104_open is failing for %d times so breaking the loop\n", retry));
-        return;
+        goto thread_exit;
     }
-    tr104Initialized = 1;
+    pthread_mutex_lock(&mtaTR104InitMutex);
+    mtaTR104InitComplete = 1;
+    pthread_mutex_unlock(&mtaTR104InitMutex);
 
     CcspTraceInfo(("TR104_open returned %d and restarting CcspTr069PaSsp\n", err));
     v_secure_system("systemctl restart CcspTr069PaSsp &");
@@ -167,6 +172,55 @@ static void MtaTR104Init(void)
     {
         CcspTraceInfo(("file not present\n"));
     }
+
+thread_exit:
+    pthread_mutex_lock(&mtaTR104InitMutex);
+    mtaTR104InitInProgress = 0;
+    pthread_mutex_unlock(&mtaTR104InitMutex);
+    return NULL;
+}
+
+static void MtaTR104Init(void)
+{
+    pthread_attr_t attr;
+    pthread_t thread;
+    int rc;
+
+    pthread_mutex_lock(&mtaTR104InitMutex);
+    if (mtaTR104InitInProgress || mtaTR104InitComplete)
+    {
+        pthread_mutex_unlock(&mtaTR104InitMutex);
+        return;
+    }
+
+    rc = pthread_attr_init(&attr);
+    if (rc != 0)
+    {
+        pthread_mutex_unlock(&mtaTR104InitMutex);
+        CcspTraceError(("Failed to initialize TR104 thread attributes: %d\n", rc));
+        return;
+    }
+
+    rc = pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    if (rc != 0)
+    {
+        pthread_attr_destroy(&attr);
+        pthread_mutex_unlock(&mtaTR104InitMutex);
+        CcspTraceError(("Failed to set TR104 thread detached state: %d\n", rc));
+        return;
+    }
+
+    mtaTR104InitInProgress = 1;
+    rc = pthread_create(&thread, &attr, MtaTR104InitWorker, NULL);
+    pthread_attr_destroy(&attr);
+    if (rc != 0)
+    {
+        mtaTR104InitInProgress = 0;
+        pthread_mutex_unlock(&mtaTR104InitMutex);
+        CcspTraceError(("Failed to start TR104 initialization thread: %d\n", rc));
+        return;
+    }
+    pthread_mutex_unlock(&mtaTR104InitMutex);
 }
 #endif
 
