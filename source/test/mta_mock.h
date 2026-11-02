@@ -38,6 +38,7 @@
 #include <mocks/mock_webconfigframework.h>
 #include <mocks/mock_msgpack.h>
 #include <mocks/mock_rbus.h>
+#include <mocks/mock_securewrapper.h>
 
 
 extern char g_SubSysPrefix_Irep[32];

@@ -36,6 +36,7 @@ PtdHandlerMock * g_PtdHandlerMock = NULL;
 webconfigFwMock *g_webconfigFwMock = NULL;
 msgpackMock *g_msgpackMock = NULL;
 rbusMock *g_rbusMock = NULL;
+SecureWrapperMock *g_securewrapperMock = NULL;
 
 
 ANSC_HANDLE g_MessageBusHandle_Irep = NULL;
@@ -61,6 +62,7 @@ CcspMtaTestFixture::CcspMtaTestFixture()
     g_webconfigFwMock = new webconfigFwMock;
     g_msgpackMock = new msgpackMock;
     g_rbusMock = new rbusMock;
+    g_securewrapperMock = new SecureWrapperMock;
 }
 
 CcspMtaTestFixture::~CcspMtaTestFixture()
@@ -80,6 +82,7 @@ CcspMtaTestFixture::~CcspMtaTestFixture()
     delete g_webconfigFwMock;
     delete g_msgpackMock;
     delete g_rbusMock;
+    delete g_securewrapperMock;
 
     g_safecLibMock = nullptr;
     g_usertimeMock = nullptr;
@@ -95,6 +98,7 @@ CcspMtaTestFixture::~CcspMtaTestFixture()
     g_webconfigFwMock = nullptr;
     g_msgpackMock = nullptr;
     g_rbusMock = nullptr;
+    g_securewrapperMock = nullptr;
 
 }
 

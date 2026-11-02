@@ -65,6 +65,7 @@ CcspMtaAgentSsp_gtest_bin_LDADD =$(HOME)/usr/local/lib/libmock_mta_hal.la \
                                 $(HOME)/usr/local/lib/libmock_sysevent.la \
                                 $(HOME)/usr/local/lib/libmock_msgpack.la \
                                 $(HOME)/usr/local/lib/libmock_rbus.la \
+                                $(HOME)/usr/local/lib/libmock_secure_wrapper.la \
                                 $(HOME)/usr/local/lib/libmock_webconfigframework.la 
 
 
