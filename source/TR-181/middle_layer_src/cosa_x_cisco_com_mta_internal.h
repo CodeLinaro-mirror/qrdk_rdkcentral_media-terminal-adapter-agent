@@ -114,6 +114,10 @@ COSA_DATAMODEL_MTA, *PCOSA_DATAMODEL_MTA;
 /*
     Standard function declaration
 */
+#if defined(MTA_TR104SUPPORT)
+void MtaTR104Init(BOOL isEthWan);
+#endif
+
 ANSC_HANDLE
 CosaMTACreate
     (

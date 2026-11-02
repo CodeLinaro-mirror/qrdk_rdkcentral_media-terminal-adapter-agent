@@ -69,7 +69,7 @@
 
 **************************************************************************/
 
-#if defined(ENABLE_ETH_WAN) && defined(MTA_TR104SUPPORT)
+#if defined(MTA_TR104SUPPORT)
 /* Must precede mta_hal.h: LatticeFrameworkTypes.h typedefs CHAR, which mta_hal.h #defines */
 #include "TR104.h"
 #include "secure_wrapper.h"
@@ -96,20 +96,19 @@
 static int sysevent_fd;
 static token_t sysevent_token;
 
-#if defined(ENABLE_ETH_WAN) && defined(MTA_TR104SUPPORT)
+#if defined(MTA_TR104SUPPORT)
 int CosaDmlTR104DataSet(char *pString,int bootup);
 
 static pthread_mutex_t mtaTR104InitMutex = PTHREAD_MUTEX_INITIALIZER;
 static int mtaTR104InitInProgress;
 static int mtaTR104InitComplete;
 
-/* Called once MTA HAL provisioning succeeds; replaces the timed MTA_PROVISION poll in ssp_main.c */
 static void *MtaTR104InitWorker(void *arg)
 {
     char value[8] = {'\0'};
+    BOOL isEthWan = *(const BOOL *)arg;
+    int maxRetries = isEthWan ? 8 : 24;
     int retry, err = -1;
-
-    (void)arg;
 
     for (retry = 0; retry < 5; retry++)
     {
@@ -124,13 +123,16 @@ static void *MtaTR104InitWorker(void *arg)
     }
     CcspTraceInfo(("RFC for TR104 is true\n"));
 
-    for (retry = 0; retry < 8; retry++)
+    for (retry = 0; retry < maxRetries; retry++)
     {
-        sleep(4);
+        if (isEthWan)
+            sleep(4);
         err = TR104_open();
         CcspTraceInfo(("TR104_open returned %d during %d iteration\n", err, retry));
         if (err == 0)
             break;
+        if (!isEthWan)
+            sleep(10);
     }
     if (err != 0)
     {
@@ -180,8 +182,10 @@ thread_exit:
     return NULL;
 }
 
-static void MtaTR104Init(void)
+void MtaTR104Init(BOOL isEthWan)
 {
+    static BOOL ethWanMode = TRUE;
+    static BOOL docsisMode = FALSE;
     pthread_attr_t attr;
     pthread_t thread;
     int rc;
@@ -211,7 +215,7 @@ static void MtaTR104Init(void)
     }
 
     mtaTR104InitInProgress = 1;
-    rc = pthread_create(&thread, &attr, MtaTR104InitWorker, NULL);
+    rc = pthread_create(&thread, &attr, MtaTR104InitWorker, isEthWan ? &ethWanMode : &docsisMode);
     pthread_attr_destroy(&attr);
     if (rc != 0)
     {
@@ -678,7 +682,7 @@ CosaMTAInitializeEthWanProvDhcpOption
                 CcspTraceInfo(("%s: syscfg MTA_PROVISION successfully set to true\n", __FUNCTION__));
             }
 #if defined(MTA_TR104SUPPORT)
-            MtaTR104Init();
+            MtaTR104Init(TRUE);
 #endif
                         /*Coverity Fix  CID:120996 RESOURCE_LEAK */
                         free(pMtaProv);
@@ -1126,7 +1130,7 @@ if(pMtaProv && pMyObject->pmtaprovinfo)
                 CcspTraceInfo(("%s: syscfg MTA_PROVISION successfully set to true\n", __FUNCTION__));
             }
 #if defined(MTA_TR104SUPPORT)
-            MtaTR104Init();
+            MtaTR104Init(TRUE);
 #endif
                         /* Coverity Fix CID:74083 RESOURCE_LEAK */
                         free(pMtaProv);
@@ -1359,7 +1363,7 @@ if(pMtaProv)
                 CcspTraceInfo(("%s: syscfg MTA_PROVISION successfully set to true\n", __FUNCTION__));
             }
 #if defined(MTA_TR104SUPPORT)
-            MtaTR104Init();
+            MtaTR104Init(TRUE);
 #endif
 			status = ANSC_STATUS_SUCCESS;
                    

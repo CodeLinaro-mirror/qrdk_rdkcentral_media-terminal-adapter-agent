@@ -55,10 +55,8 @@
 #define DEBUG_INI_NAME  "/etc/debug.ini"
 #ifdef MTA_TR104SUPPORT
 #define MTAAGENT_SYSEVENT 1
-#include "TR104.h"
-#define TR104_ENABLE "TR104enable"
+#include "cosa_x_cisco_com_mta_internal.h"
 #include "webconfig_framework.h"
-int CosaDmlTR104DataSet(char *pString,int bootup);
 #endif
 
 #include "cap.h"
@@ -533,81 +531,15 @@ int main(int argc, char* argv[])
     CcspTraceWarning(("RDKB_SYSTEM_BOOT_UP_LOG : Entering MTA loop\n"));
     printf("Entering MTA loop\n");
 #ifdef MTA_TR104SUPPORT
-    int retry=0,retry1=0;
     CcspTraceInfo(("TR104 supports in this build\n"));
-  
-   
-  
-    char value[8] = {'\0'};
     if (strcmp(eth_wan_enabled,"true") == 0)
     {
         CcspTraceInfo(("Device is in ETHWAN mode, TR104 init is triggered after MTA HAL provisioning\n"));
     }
     else
     {
-        while(retry<5)
-        {
-            if( syscfg_get(NULL, TR104_ENABLE, value, sizeof(value)) == 0 )
-            {
-                if( strcmp(value, "true") == 0 )
-                {
-                    CcspTraceInfo(("RFC for TR104 is true\n"));
-
-                        while(retry1<24)
-                        {
-                            err = TR104_open();
-                            CcspTraceInfo(("TR104_open returned %d during %d iteration\n", err,retry1));
-                            if(err == 0)
-                            {
-                                CcspTraceInfo(("TR104_open returned %d and restarting CcspTr069PaSsp\n", err));
-                                v_secure_system("systemctl restart CcspTr069PaSsp &");
-                                FILE* fptr= fopen("/nvram/.vsb64.txt","rb");
-                                if (fptr)
-                                {
-                                    CcspTraceDebug(("file present and about to read\n"));
-                                    char* buffer=0;
-                                    int length;
-                                    fseek (fptr, 0, SEEK_END);
-                                    length = ftell (fptr);
-                                    fseek (fptr, 0, SEEK_SET);
-                                    buffer = (char*)malloc (length+1);
-                                    if (buffer)
-                                    {
-                                        /* Coverity Fix : CHECKED_RETURN */
-                                        size_t bytesRead = fread(buffer, 1, length, fptr);
-                                        if (bytesRead > 0) {
-                                            buffer[bytesRead] = '\0'; 
-                                            CcspTraceInfo(("buffer=%s\n", buffer));
-                                            CosaDmlTR104DataSet(buffer, 1);
-                                        } else {
-                                            CcspTraceWarning(("fread failed or returned 0 bytes\n"));
-                                        }
-                                        free(buffer);
-                                    }
-                                    fclose (fptr);
-                                }
-                                else
-                                {
-                                    CcspTraceDebug(("file not present\n"));
-                                }
-                                break;
-                            }
-                            retry1++;
-                            sleep(10);
-                        }
-                }
-                else
-                {
-                    CcspTraceInfo(("RFC for TR104 is false \n"));
-                }
-                break;
-            }
-            else
-            {
-                CcspTraceError(("syscfg_get is failed\n"));
-                retry++;
-            }
-        }
+        CcspTraceInfo(("Device is in DOCSIS mode, starting TR104 initialization thread\n"));
+        MtaTR104Init(FALSE);
     }
     check_component_crash("/tmp/mta_initialized");
 #endif
@@ -655,5 +587,3 @@ int main(int argc, char* argv[])
  
     return 0;
 }
-
-
