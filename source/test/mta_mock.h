@@ -64,6 +64,7 @@ class CcspMtaTestFixture : public ::testing::Test {
         webconfigFwMock mockedwebconfigFw;
         msgpackMock mockedmsgpack;
         rbusMock mockedrbus;
+        SecureWrapperMock mockedSecureWrapper;
 
 
         CcspMtaTestFixture();

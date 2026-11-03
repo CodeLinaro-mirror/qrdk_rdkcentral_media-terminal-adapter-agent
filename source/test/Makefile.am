@@ -52,6 +52,7 @@ CcspMtaAgentSsp_gtest_bin_SOURCES = gtest_main.cpp \
                                     cosa_x_cisco_com_mta_dml_test.cpp \
                                     TR104_webconfig_test.cpp \
                                     TR104_test.cpp \
+                                    TR104_init_test.cpp \
                                     plugin_main_apis_test.cpp \
                                     cosa_x_cisco_com_mta_internal_test.cpp \
                                     mta_mock.cpp
