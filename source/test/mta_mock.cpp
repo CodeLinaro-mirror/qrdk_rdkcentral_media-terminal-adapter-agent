@@ -106,4 +106,13 @@ void CcspMtaTestFixture::SetUp() {}
 void CcspMtaTestFixture::TearDown() {}
 void CcspMtaTestFixture::TestBody() {}
 
+/* Mock wrapper for v_secure_system to prevent real systemctl execution */
+extern "C" int __wrap_v_secure_system(const char *command)
+{
+    if (!command)
+        return -1;
+    /* Mock: Always return success without executing */
+    return 0;
+}
+
 // end of file

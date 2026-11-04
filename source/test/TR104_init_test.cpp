@@ -31,6 +31,7 @@ int __real_pthread_create(pthread_t *, const pthread_attr_t *,
                           void *(*)(void *), void *);
 unsigned int __real_sleep(unsigned int);
 FILE *__real_fopen(const char *, const char *);
+int __real_mta_hal_start_provisioning(PMTAMGMT_MTA_PROVISIONING_PARAMS params);
 }
 
 extern SyscfgMock *g_syscfgMock;
@@ -97,9 +98,15 @@ extern "C" FILE *__wrap_fopen(const char *path, const char *mode)
 
 extern "C" int __wrap_mta_hal_start_provisioning(PMTAMGMT_MTA_PROVISIONING_PARAMS params)
 {
+    /* If no test control is installed, forward to real HAL mock */
+    if (!control) {
+        return __real_mta_hal_start_provisioning(params);
+    }
+
+    /* Test control is active: validate call and return queued result */
     EXPECT_NE(nullptr, params);
-    if (!control || control->provisioningCalls >= control->provisioningResults.size()) {
-        ADD_FAILURE() << "Unexpected HAL provisioning call";
+    if (control->provisioningCalls >= control->provisioningResults.size()) {
+        ADD_FAILURE() << "Unexpected HAL provisioning call (result list exhausted)";
         return -1;
     }
     return control->provisioningResults[control->provisioningCalls++];
