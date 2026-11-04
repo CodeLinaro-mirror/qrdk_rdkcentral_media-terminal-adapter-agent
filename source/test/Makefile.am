@@ -37,6 +37,7 @@ CcspMtaAgentSsp_gtest_bin_CPPFLAGS = -I$(PKG_CONFIG_SYSROOT_DIR)$(includedir)/gt
                                      -D_CBR_PRODUCT_REQ_ \
                                      -D_XB6_PRODUCT_REQ_ \
                                      -DMTA_TR104SUPPORT \
+                                     -DENABLE_ETH_WAN \
                                      -DINTEL_PUMA7 \
                                      -DCONFIG_TI_BBU
 
@@ -57,7 +58,11 @@ CcspMtaAgentSsp_gtest_bin_SOURCES = gtest_main.cpp \
                                     cosa_x_cisco_com_mta_internal_test.cpp \
                                     mta_mock.cpp
 
-CcspMtaAgentSsp_gtest_bin_LDFLAGS = -lgtest -lgmock -lgcov -lcjson -lpthread
+CcspMtaAgentSsp_gtest_bin_LDFLAGS = -lgtest -lgmock -lgcov -lcjson -lpthread \
+                                     -Wl,--wrap=pthread_create \
+                                     -Wl,--wrap=sleep \
+                                     -Wl,--wrap=fopen \
+                                     -Wl,--wrap=mta_hal_start_provisioning
 
 CcspMtaAgentSsp_gtest_bin_LDADD =$(HOME)/usr/local/lib/libmock_mta_hal.la \
                                 $(HOME)/usr/local/lib/libmock_safec_lib.la \

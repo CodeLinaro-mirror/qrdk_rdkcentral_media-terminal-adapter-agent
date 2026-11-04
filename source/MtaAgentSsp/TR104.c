@@ -613,4 +613,16 @@ int TR104_open()
 
     return RBUS_ERROR_OUT_OF_RESOURCES;
 }
+
+/* Test-only function to reset initializer state for test fixtures */
+#ifdef ENABLE_ETH_WAN
+void MtaTR104InitResetForTest(void)
+{
+    pthread_mutex_lock(&mtaTR104InitMutex);
+    mtaTR104InitInProgress = 0;
+    mtaTR104InitComplete = 0;
+    pthread_mutex_unlock(&mtaTR104InitMutex);
+}
+#endif
+
 #endif

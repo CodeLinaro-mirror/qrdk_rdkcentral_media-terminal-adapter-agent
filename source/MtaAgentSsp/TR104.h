@@ -38,4 +38,8 @@ rbusError_t TR104Services_TableHandler(rbusHandle_t handle, rbusProperty_t inPro
 rbusError_t TR104Services_GetHandler(rbusHandle_t handle, rbusProperty_t inProperty, rbusGetHandlerOptions_t* opts);
 rbusError_t TR104Services_SetHandler(rbusHandle_t handle, rbusProperty_t inProperty, rbusSetHandlerOptions_t* opts);
 
+#ifdef ENABLE_ETH_WAN
+void MtaTR104InitResetForTest(void);
+#endif
+
 #endif
