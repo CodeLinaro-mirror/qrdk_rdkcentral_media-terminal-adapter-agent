@@ -62,7 +62,7 @@ COMMON_LDFLAGS = -lgtest -lgmock -lgcov -lcjson -lpthread
 # Primary test binary (without ETHWAN - avoids thread race conditions)
 bin_PROGRAMS = CcspMtaAgentSsp_gtest.bin
 
-CcspMtaAgentSsp_gtest_bin_CPPFLAGS = $(COMMON_CPPFLAGS)
+CcspMtaAgentSsp_gtest_bin_CPPFLAGS = $(COMMON_CPPFLAGS) -DENABLE_ETH_WAN
 
 CcspMtaAgentSsp_gtest_bin_SOURCES = gtest_main.cpp \
                                     $(COMMON_SOURCES) \
@@ -93,7 +93,6 @@ CcspMtaAgentSsp_ethwan_gtest_bin_LDFLAGS = $(COMMON_LDFLAGS) \
                                            -Wl,--wrap=pthread_create \
                                            -Wl,--wrap=sleep \
                                            -Wl,--wrap=fopen \
-                                           -Wl,--wrap=v_secure_system \
                                            -Wl,--wrap=mta_hal_start_provisioning
 
 CcspMtaAgentSsp_ethwan_gtest_bin_LDADD = $(COMMON_LDLIBS)
