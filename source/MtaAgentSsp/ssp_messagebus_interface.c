@@ -101,7 +101,8 @@ ssp_PnmMbi_MessageBusEngage
     ANSC_STATUS                 returnStatus       = ANSC_STATUS_SUCCESS;
     CCSP_Base_Func_CB           cb                 = {0};
     errno_t rc = -1;
-    
+    int                          mbInitResult       = 0;
+
     char PsmName[256];
 
 
@@ -118,7 +119,7 @@ ssp_PnmMbi_MessageBusEngage
              return ANSC_STATUS_FAILURE;
      }
     /* Connect to message bus */
-    returnStatus = 
+    mbInitResult =
         CCSP_Message_Bus_Init
             (
                 component_id,
@@ -128,12 +129,15 @@ ssp_PnmMbi_MessageBusEngage
                 Ansc_FreeMemory_Callback            /* freefc,   use default */
             );
 
-    if ( returnStatus != ANSC_STATUS_SUCCESS )
+    /* CID overflow fix: normalize the signed result before mapping to ANSC_STATUS */
+    if ( mbInitResult != 0 )
     {
         CcspTraceError((" !!! PNM Message Bus Init ERROR !!!\n"));
 
-        return returnStatus;
+        return ANSC_STATUS_FAILURE;
     }
+
+    returnStatus = ANSC_STATUS_SUCCESS;
 
     if ( g_Subsystem[0] != 0 )
     {

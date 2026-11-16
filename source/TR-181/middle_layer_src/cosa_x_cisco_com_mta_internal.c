@@ -563,6 +563,8 @@ CosaMTAInitializeEthWanProvDhcpOption
 		}
      #endif
      /* CID 121017 Structurally dead code fix */
+	 /* Coverity fix: Resource leak */
+	 free(pMtaProv);
      return ANSC_STATUS_SUCCESS;
 }
 
