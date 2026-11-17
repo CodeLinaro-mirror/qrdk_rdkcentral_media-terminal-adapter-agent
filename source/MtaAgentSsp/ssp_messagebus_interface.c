@@ -137,8 +137,6 @@ ssp_PnmMbi_MessageBusEngage
         return ANSC_STATUS_FAILURE;
     }
 
-    returnStatus = ANSC_STATUS_SUCCESS;
-
     if ( g_Subsystem[0] != 0 )
     {
 	/* CID 59433  Calling risky function fix */
